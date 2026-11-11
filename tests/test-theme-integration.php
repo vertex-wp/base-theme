@@ -26,6 +26,15 @@ class Test_Theme_Integration extends WP_UnitTestCase {
 		$this->assertNotFalse( has_action( 'init', array( $theme, 'init' ) ) );
 		$this->assertNotFalse( has_action( 'after_switch_theme', array( $theme, 'activate' ) ) );
 		$this->assertNotFalse( has_action( 'switch_theme', array( $theme, 'deactivate' ) ) );
+		$this->assertNotFalse( has_action( 'after_setup_theme', array( 'VertexLoader', 'initialize' ) ) );
 		$this->assertInstanceOf( App::class, App::getInstance() );
+
+		$themes_property = new ReflectionProperty( App::class, 'themes' );
+		$themes_property->setAccessible( true );
+
+		$this->assertContains(
+			dirname( EXAMPLE_THEME_FILE ),
+			$themes_property->getValue( App::getInstance() )
+		);
 	}
 }
