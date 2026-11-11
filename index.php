@@ -1,3 +1,10 @@
 <?php
+/**
+ * Front-end template entry point.
+ *
+ * @package ExampleTheme
+ */
 
-EPM\App::get_instance()->terminate();
+defined( 'ABSPATH' ) || exit;
+
+\Vertex\App::getInstance()->terminate();

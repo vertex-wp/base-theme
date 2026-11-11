@@ -1,0 +1,40 @@
+name: PHP Lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: PHP syntax (PHP ${{ matrix.php-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version: ['8.0', '8.1', '8.2', '8.3', '8.4', '8.5', '8.6']
+    continue-on-error: ${{ matrix.php-version == '8.6' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          tools: none
+      - name: Lint theme PHP files
+        shell: bash
+        run: |
+          set -euo pipefail
+          find . \
+            -path './.git' -prune -o \
+            -path './vertex' -prune -o \
+            -path './vendor' -prune -o \
+            -type f -name '*.php' -print0 |
+            xargs -0 -r -n1 php -l

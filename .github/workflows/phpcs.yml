@@ -1,0 +1,32 @@
+name: WordPress Coding Standards
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  phpcs:
+    name: PHPCS
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer
+      - name: Install WordPress Coding Standards
+        run: |
+          composer global config allow-plugins.dealerdirect/phpcodesniffer-composer-installer true
+          composer global require --no-interaction --prefer-dist wp-coding-standards/wpcs:^3.0
+      - name: Run PHPCS
+        run: |
+          "$(composer global config bin-dir --absolute)/phpcs" --standard=phpcs.xml.dist

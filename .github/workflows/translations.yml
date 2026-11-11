@@ -2,10 +2,11 @@ name: Build translation files
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
     paths:
-      - '**/*.php'
+      - 'functions.php'
+      - 'src/**/*.php'
+      - 'style.css'
       - 'languages/*.po'
       - '.github/workflows/translations.yml'
   workflow_dispatch:
@@ -13,51 +14,51 @@ on:
 permissions:
   contents: write
 
+# Serialise generated commits with Vertex synchronisation.
 concurrency:
-  group: translation-files-${{ github.ref }}
+  group: base-theme-main-writes
   cancel-in-progress: false
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
-          ref: ${{ github.ref }}
-
-      - name: Set up PHP
-        uses: shivammathur/setup-php@v2
+          ref: main
+          fetch-depth: 0
+      - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
           tools: none
-
       - name: Install WP-CLI
         run: |
           curl -fsSLo wp-cli.phar https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
           php wp-cli.phar --info
-
       - name: Generate POT from theme source
-        run: php wp-cli.phar i18n make-pot . languages/ephpicman-starter.pot --domain=ephpicman-starter
-
-      - name: Update existing PO catalogs without discarding translations
+        run: php wp-cli.phar i18n make-pot . languages/vertex-starter.pot --domain=vertex-starter --exclude=vertex
+      - name: Update existing PO catalogues without discarding translations
         run: |
-          if [ -f languages/ephpicman-starter-fa_IR.po ]; then
-            php wp-cli.phar i18n update-po languages/ephpicman-starter.pot languages/ephpicman-starter-fa_IR.po
+          if [ -f languages/vertex-starter-fa_IR.po ]; then
+            php wp-cli.phar i18n update-po languages/vertex-starter.pot languages/vertex-starter-fa_IR.po
           fi
-
       - name: Compile MO files
         run: php wp-cli.phar i18n make-mo languages
-
       - name: Commit generated translation files
+        shell: bash
         run: |
-          if [[ -n "$(git status --porcelain -- languages)" ]]; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add languages/*.pot languages/*.po languages/*.mo
-            git commit -m "chore(i18n): regenerate translation files [skip ci]"
-            git push
-          else
+          set -euo pipefail
+
+          if [[ -z "$(git status --porcelain -- languages)" ]]; then
             echo "Translation files are already up to date."
+            exit 0
           fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add languages/*.pot languages/*.po languages/*.mo
+          git commit -m "chore(i18n): regenerate translation files [skip ci]"
+
+          git fetch origin main
+          git rebase origin/main
+          git push origin HEAD:main

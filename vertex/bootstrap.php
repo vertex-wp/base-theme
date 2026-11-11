@@ -1,20 +1,28 @@
 <?php
 
+/**
+ * @author    Sina Kuhestani <sinakuhestani@gmail.com>
+ * @copyright 2026 Sina Kuhestani (EphpicMan)
+ * @link      https://github.com/ephpicman GitHub
+ * @link      https://www.linkedin.com/in/ephpicman LinkedIn
+ * @license   See the LICENSE file in the project root.
+ */
+
 declare(strict_types=1);
 
 defined('ABSPATH') || exit;
 
-if (!class_exists('EphpicManLoader', false)) {
-    final class EphpicManLoader
+if (!class_exists('VertexLoader', false)) {
+    final class VertexLoader
     {
-        /** @var array<string, array{version: string, path: string}> */
+        /** @var array<string, array{framework_version: string, path: string}> */
         private static array $availableFrameworkInstances = [];
         /** @var array<string, string> */
         private static array $products = [];
         private static bool $isFinalizationHookRegistered = false;
         private static bool $initialized = false;
 
-        public static function register(string $pluginPath, string $pluginNamespace, string $pluginVersion): void
+        public static function register(string $pluginPath, string $pluginNamespace, string $frameworkVersion): void
         {
             if (self::$initialized)
                 return;
@@ -29,19 +37,19 @@ if (!class_exists('EphpicManLoader', false)) {
             if (false === $pluginPath)
                 return;
 
-            $frameworkPath = "{$pluginPath}/epm";
+            $frameworkPath = "{$pluginPath}/vertex";
             $productPath = "{$pluginPath}/src";
 
             if (
                 !is_dir("{$frameworkPath}/src") ||
                 !is_dir($productPath) ||
-                !preg_match('/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/', $pluginVersion)
+                !preg_match('/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/', $frameworkVersion)
             ) {
                 return;
             }
 
             self::$availableFrameworkInstances[$frameworkPath] = [
-                'version' => $pluginVersion,
+                'framework_version' => $frameworkVersion,
                 'path' => $frameworkPath,
             ];
 
@@ -64,7 +72,7 @@ if (!class_exists('EphpicManLoader', false)) {
 
             usort(
                 $availableFrameworkInstances,
-                static fn(array $a, array $b): int => version_compare($b['version'], $a['version'])
+                static fn(array $a, array $b): int => version_compare($b['framework_version'], $a['framework_version'])
             );
 
             $selected = $availableFrameworkInstances[0];
@@ -77,7 +85,7 @@ if (!class_exists('EphpicManLoader', false)) {
 
             spl_autoload_register(
                 static function (string $class) use ($frameworkSourcePath): void {
-                    self::autoloadClass($class, ['EphpicMan\\Framework\\' => $frameworkSourcePath]);
+                    self::autoloadClass($class, ['Vertex\\' => $frameworkSourcePath]);
                 }
             );
 
@@ -110,20 +118,22 @@ if (!class_exists('EphpicManLoader', false)) {
         }
     }
 
-    add_action('wp_loaded', static fn(): void => EphpicMan\Framework\App::getInstance()->run());
+    add_action('wp_loaded', static function (): void {
+        Vertex\App::getInstance()->run();
+    });
 }
 
 /*
  * Register the loader from the product's main plugin file, not here.
  *
- * The product must keep its directories named /epm and /src.
+ * The product must keep its directories named /vertex and /src.
  * Pass only the product root path; the loader resolves both directories internally.
  *
  * Example (in the main plugin file):
  *
- * EphpicManLoader::register(
+ * VertexLoader::register(
  *     __DIR__,
- *     'EphpicMan\\MyPlugin\\',
+ *     'ExamplePlugin\\',
  *     '1.4.0',
  * );
  */
