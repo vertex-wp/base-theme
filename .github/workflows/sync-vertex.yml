@@ -12,6 +12,7 @@ on:
 permissions:
   contents: write
 
+# Serialise workflows that commit generated files to main.
 concurrency:
   group: base-theme-main-writes
   cancel-in-progress: false
