@@ -11,7 +11,7 @@ Keep these minimums aligned with theme metadata, PHPCS, and CI.
 
 ## Architecture
 
-WordPress loads `functions.php`, which loads the synchronised `vertex/bootstrap.php` and theme class, then registers the product with `VertexLoader::register()`. The loader registers the `ExampleTheme\\` namespace and `src/` directory. `src/Theme.php` registers the theme directory with `Vertex\\App::getInstance()` and loads translations. Vertex runs its application on `wp_loaded`; `index.php` delegates request termination to Vertex.
+WordPress loads `functions.php`, which loads the synchronised `vertex/bootstrap.php` and theme class, then registers the product with `VertexLoader::register()`. The loader registers the `ExampleTheme\` namespace and `src/` directory. `src/Theme.php` registers the theme directory with `Vertex\App::getInstance()` and loads translations. Vertex runs its application on `wp_loaded`; `index.php` delegates request termination to Vertex.
 
 Keep theme-specific code under `src/`. Never make product changes inside `vertex/`.
 
