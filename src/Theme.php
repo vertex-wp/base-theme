@@ -35,6 +35,9 @@ final class Theme {
 		return self::$instance;
 	}
 
+	/**
+	 * Prevent direct construction.
+	 */
 	private function __construct() {}
 
 	/**
