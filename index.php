@@ -1,3 +1,5 @@
 <?php
 
-EPM\App::get_instance()->terminate();
+defined( 'ABSPATH' ) || exit;
+
+\Vertex\App::getInstance()->terminate();
